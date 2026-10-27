@@ -117,6 +117,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 SNIPPE_API_KEY = os.getenv("SNIPPE_API_KEY", "")
 SNIPPE_WEBHOOK_SECRET = os.getenv("SNIPPE_WEBHOOK_SECRET", "")
+SNIPPE_FAKE_MODE = False
 SNIPPE_BASE_URL = os.getenv("SNIPPE_BASE_URL", "https://api.snippe.sh")
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:3000")
 MUSIC_ENGINE = os.getenv("MUSIC_ENGINE", "fake")

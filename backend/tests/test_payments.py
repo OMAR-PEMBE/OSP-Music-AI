@@ -11,7 +11,7 @@ import pytest
 from allauth.account.models import EmailAddress
 from django.contrib.auth import get_user_model
 from django.db import close_old_connections, connections
-from django.test import Client
+from django.test import Client, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -94,6 +94,7 @@ def send_webhook(client, payment, *, timestamp=None, signature=None):
 @pytest.fixture(autouse=True)
 def webhook_secret(settings):
     settings.SNIPPE_WEBHOOK_SECRET = "test-webhook-secret"
+    settings.SNIPPE_FAKE_MODE = False
 
 
 def test_valid_webhook_confirms_and_credits_once(monkeypatch):
@@ -356,3 +357,24 @@ def test_topup_creation_normalizes_phone_and_returns_polling_fields(monkeypatch)
         "created_at",
         "completed_at",
     }
+
+
+def test_local_fake_topup_credits_only_through_confirmed_wallet_service():
+    user, wallet = make_user()
+    client = APIClient()
+    client.force_authenticate(user=user)
+
+    with override_settings(DEBUG=True, SNIPPE_FAKE_MODE=True):
+        response = client.post(
+            reverse("wallet-topups"),
+            {"amount_tzs": 1000, "phone": "0712345678"},
+            format="json",
+        )
+
+    payment = Payment.objects.get(user=user)
+    wallet.refresh_from_db()
+    assert response.status_code == 201
+    assert response.data["status"] == Payment.Status.COMPLETED
+    assert payment.confirmed_amount_tzs == 1000
+    assert wallet.balance_tzs == 1000
+    assert LedgerEntry.objects.filter(payment=payment).count() == 1

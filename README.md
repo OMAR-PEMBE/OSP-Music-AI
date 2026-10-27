@@ -1,6 +1,6 @@
 # OSP Music AI
 
-Local development stack for OSP Music AI. The backend uses Django REST Framework, PostgreSQL, Celery, Redis, and S3-compatible object storage (MinIO/SILO in Compose). Music generation defaults to `MUSIC_ENGINE=fake`; the deterministic fake engine exercises the complete song-job lifecycle and engine router without provider credentials. The Mureka adapter is available when configured with a backend-only API key. Suno remains a non-networking skeleton until its official API details are added to `DOCS/SUNO.md` §3.
+Local development stack for OSP Music AI. The backend uses Django REST Framework, PostgreSQL, Celery, Redis, and S3-compatible object storage (MinIO/SILO in Compose). Music generation defaults to `MUSIC_ENGINE=fake`; the deterministic fake engine exercises song jobs without provider credentials. The wallet uses `SNIPPE_FAKE_MODE=true` locally to simulate a confirmed top-up through the regular wallet settlement path. This mode makes no payment-provider network calls and is disabled in production. Mureka and Suno credentials can be added later; Suno remains a non-networking skeleton until its official API details are added to `DOCS/SUNO.md` section 3.
 
 ## Run locally
 
@@ -30,7 +30,7 @@ Requirements: Docker Engine with the Docker Compose plugin.
 
 The headless browser auth API is mounted at `/api/auth/browser/v1/auth/`. Profile read/update and avatar upload use `/api/me`, `/api/me/avatar`; account deletion uses `/api/me/delete`. Song endpoints are under `/api/songs`; the lyrics helper is `/api/lyrics`. Generated audio is stored in the local S3-compatible bucket and served through short-lived signed URLs.
 
-PostgreSQL, Redis, and the S3-compatible `minio` service are private to the Compose network. The service uses SILO, a MinIO community fork, because upstream MinIO images are no longer pullable. Its local console is at <http://localhost:9001> (credentials are in `docker-compose.yml`). Local account avatars use the persistent `media` volume; production storage is configured for Cloudflare R2. No external API credentials are needed for local account flows.
+PostgreSQL, Redis, and the S3-compatible `minio` service are private to the Compose network. The service uses SILO, a MinIO community fork, because upstream MinIO images are no longer pullable. Its local console is at <http://localhost:9001> (credentials are in `docker-compose.yml`). Local account avatars use the persistent `media` volume; production storage is configured for Cloudflare R2. No external API credentials are needed for local development flows. Demo wallet top-ups are labeled on the wallet screen and complete instantly without contacting Snippe.
 
 ## Backend checks
 

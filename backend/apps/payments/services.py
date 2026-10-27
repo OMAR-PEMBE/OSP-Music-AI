@@ -2,15 +2,22 @@ import logging
 import secrets
 from datetime import timedelta
 
+from django.conf import settings
 from django.db import transaction
 from django.utils import timezone
 
 from apps.wallet.services import credit_topup
 
 from .models import Payment
-from .snippe_client import SnippeClient
+from .snippe_client import FakeSnippeClient, SnippeClient
 
 logger = logging.getLogger(__name__)
+
+
+def _snippe_client():
+    if settings.DEBUG and settings.SNIPPE_FAKE_MODE:
+        return FakeSnippeClient()
+    return SnippeClient()
 
 
 def new_short_id():
@@ -26,7 +33,7 @@ def create_payment(user, *, amount_tzs, phone):
         phone=phone,
     )
     try:
-        response = SnippeClient().create_payment(payment)
+        response = _snippe_client().create_payment(payment)
         data = response.get("data") or {}
         reference = data.get("reference")
         if not isinstance(reference, str) or not reference:
@@ -48,6 +55,8 @@ def create_payment(user, *, amount_tzs, phone):
         payment.save(update_fields=["status", "failure_reason", "updated_at"])
         logger.warning("Snippe payment creation failed for %s", payment.pk)
         raise PaymentProviderError from exc
+    if settings.DEBUG and settings.SNIPPE_FAKE_MODE:
+        payment = confirm_payment(payment)
     return payment
 
 
@@ -81,7 +90,7 @@ def confirm_payment(payment):
     if not payment.snippe_reference:
         return payment
     try:
-        response = SnippeClient().get_payment(payment.snippe_reference)
+        response = _snippe_client().get_payment(payment.snippe_reference)
     except Exception:
         logger.exception("Could not confirm Snippe payment %s", payment.pk)
         return payment

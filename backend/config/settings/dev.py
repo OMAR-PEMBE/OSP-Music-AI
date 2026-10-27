@@ -4,6 +4,12 @@ from .base import *
 
 DEBUG = True
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+SNIPPE_FAKE_MODE = os.getenv("SNIPPE_FAKE_MODE", "true").lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 MINIO_AUTO_CREATE_BUCKET = True
 STORAGES = {
     "default": {

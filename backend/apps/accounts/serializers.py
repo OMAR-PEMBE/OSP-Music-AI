@@ -59,8 +59,13 @@ class MeSerializer(serializers.ModelSerializer):
         )
 
     def get_unseen_songs(self, user):
-        # Song jobs are introduced in M4.
-        return 0
+        from apps.songs.models import SongJob
+
+        return SongJob.objects.filter(
+            user_id=user.pk,
+            deleted_at__isnull=True,
+            seen_by_user=False,
+        ).count()
 
     def validate_display_name(self, value):
         value = value.strip()

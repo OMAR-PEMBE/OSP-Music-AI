@@ -1,5 +1,9 @@
 from django.urls import path
 
-from .views import health
+from .views import ConfigView, csrf_cookie, health
 
-urlpatterns = [path("health", health, name="health")]
+urlpatterns = [
+    path("health", health, name="health"),
+    path("config", ConfigView.as_view(), name="public-config"),
+    path("csrf", csrf_cookie, name="csrf-cookie"),
+]

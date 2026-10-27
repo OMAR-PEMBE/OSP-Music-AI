@@ -3,9 +3,11 @@
 import json
 import urllib.error
 import urllib.request
+from datetime import timedelta
 from urllib.parse import quote
 
 from django.conf import settings
+from django.utils import timezone
 
 
 class SnippeError(Exception):
@@ -82,3 +84,29 @@ class SnippeClient:
 
     def get_payment(self, reference):
         return self._request("GET", f"/v1/payments/{quote(reference, safe='')}")
+
+
+class FakeSnippeClient:
+    """Local-only payment simulator; it never makes network requests."""
+
+    def create_payment(self, payment):
+        return {
+            "data": {
+                "reference": f"local-demo-{payment.pk}",
+                "expires_at": (timezone.now() + timedelta(hours=4)).isoformat(),
+            }
+        }
+
+    def get_payment(self, reference):
+        from .models import Payment
+
+        payment = Payment.objects.get(snippe_reference=reference)
+        return {
+            "data": {
+                "status": "completed",
+                "amount": {"value": payment.amount_tzs, "currency": "TZS"},
+                "completed_at": timezone.now().isoformat(),
+                "channel": {"provider": "local_demo"},
+                "settlement": {"fees": {"value": 0}},
+            }
+        }

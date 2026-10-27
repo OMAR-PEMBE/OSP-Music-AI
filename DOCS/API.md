@@ -47,11 +47,17 @@ Email must be verified before Create and Wallet work (`403 email_not_verified`).
 ```json
 { "song_price_tzs": 1000, "min_topup_tzs": 1000, "max_topup_tzs": 500000,
   "topup_presets_tzs": [1000, 3000, 5000, 10000], "generation_enabled": true,
+  "payment_demo": true,
   "lyrics_daily_limit": 10, "support_whatsapp": "2557XXXXXXXX",
   "genres": ["bongo_flava","rnb","afrobeats","amapiano","gospel","hiphop","other"] }
 ```
 
 ### `GET /api/health` → `{ "db": "ok", "redis": "ok" }`
+
+### `GET /api/csrf`
+Returns a CSRF token and sets the `csrftoken` cookie for browser clients before their first mutation.
+
+`payment_demo` is true only in local development when `SNIPPE_FAKE_MODE` is enabled. The wallet uses it to label simulated top-ups.
 
 ## 4. Me
 

@@ -86,8 +86,11 @@ This covers missed webhooks. Money is still credited exactly once thanks to WALL
 SNIPPE_API_KEY=
 SNIPPE_WEBHOOK_SECRET=        # dashboard: Settings → Webhook Secret
 SNIPPE_BASE_URL=https://api.snippe.sh
+SNIPPE_FAKE_MODE=true        # local development only; no network calls
 PUBLIC_BASE_URL=https://<domain>
 ```
+
+`config.settings.dev` enables the local fake payment client by default. It completes a demo payment through the same `confirm_payment` and `wallet.credit_topup` path, but makes no network requests. Production settings always disable fake mode.
 
 
 ## 7. Required tests (with mocked Snippe)

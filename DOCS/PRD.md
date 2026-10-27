@@ -24,7 +24,7 @@ Launch a working, paid web app fast, so real users pay for real songs. Success a
 ## 3. Platform
 
 - **Web app only**, mobile-first design. Installable to the phone home screen (PWA).
-- Interface languages: **Swahili and English** (switch in header). Default: Swahili.
+- Interface language: **English only**. Song language remains selectable separately.
 - Appearance: **light / dark** toggle. Default: follow the phone/system setting.
 
 ## 4. Features

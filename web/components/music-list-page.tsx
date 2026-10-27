@@ -82,7 +82,7 @@ export function MusicListPage() {
 }
 
 function SongCard({ song }: { song: SongJob }) {
-  const { t, locale } = useLocaleMessages();
+  const { t } = useLocaleMessages();
   const genreLabel =
     (
       {
@@ -114,7 +114,7 @@ function SongCard({ song }: { song: SongJob }) {
             <SongStatus status={song.status} />
           </div>
           <p>
-            {genreLabel} <span>·</span> {formatDate(song.created_at, locale)}
+            {genreLabel} <span>·</span> {formatDate(song.created_at)}
           </p>
           <span className="song-card-lyrics">
             {song.lyrics.slice(0, 100) || t("songDetail")}

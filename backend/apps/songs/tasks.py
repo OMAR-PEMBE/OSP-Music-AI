@@ -29,7 +29,11 @@ def _claim_queued_job(job_id, engine_name):
     with transaction.atomic():
         job = (
             SongJob.objects.select_for_update(skip_locked=True)
-            .filter(pk=job_id, status=SongJob.Status.QUEUED)
+            .filter(
+                pk=job_id,
+                status=SongJob.Status.QUEUED,
+                deleted_at__isnull=True,
+            )
             .first()
         )
         if job is None:
@@ -59,7 +63,16 @@ def _claim_queued_job(job_id, engine_name):
 
 def _submit_job(job_id, engine):
     job = SongJob.objects.select_related("user").get(pk=job_id)
+    if job.deleted_at or not job.user.is_active:
+        return False
     if not job.lyrics:
+        if not SongJob.objects.filter(
+            pk=job_id,
+            status=SongJob.Status.SUBMITTING,
+            deleted_at__isnull=True,
+            user__is_active=True,
+        ).exists():
+            return False
         prompt = build_lyrics_prompt(
             genre=job.genre,
             language=job.language,
@@ -67,10 +80,22 @@ def _submit_job(job_id, engine):
             genre_other=job.genre_other,
         )
         generated = engine.generate_lyrics(prompt)
-        job.lyrics = generated.lyrics[:5000]
-        job.lyrics_source = SongJob.LyricsSource.GENERATED
-        job.title = generated.title[:120] or job.title
-        job.save(update_fields=["lyrics", "lyrics_source", "title", "updated_at"])
+        with transaction.atomic():
+            job = SongJob.objects.select_for_update().get(pk=job_id)
+            if job.deleted_at or job.status != SongJob.Status.SUBMITTING:
+                return False
+            job.lyrics = generated.lyrics[:5000]
+            job.lyrics_source = SongJob.LyricsSource.GENERATED
+            job.title = generated.title[:120] or job.title
+            job.save(update_fields=["lyrics", "lyrics_source", "title", "updated_at"])
+
+    if not SongJob.objects.filter(
+        pk=job_id,
+        status=SongJob.Status.SUBMITTING,
+        deleted_at__isnull=True,
+        user__is_active=True,
+    ).exists():
+        return False
 
     request = SongRequest(
         job_id=str(job.pk),
@@ -115,13 +140,17 @@ def dispatch_jobs():
     if not app_settings.generation_enabled:
         return 0
     queued_jobs = list(
-        SongJob.objects.filter(status=SongJob.Status.QUEUED).order_by(
-            "created_at", "id"
-        )[:100]
+        SongJob.objects.filter(
+            status=SongJob.Status.QUEUED,
+            deleted_at__isnull=True,
+            user__is_active=True,
+        ).order_by("created_at", "id")[:100]
     )
     active_counts = {
         engine_name: SongJob.objects.filter(
-            engine=engine_name, status__in=ACTIVE_STATUSES
+            engine=engine_name,
+            status__in=ACTIVE_STATUSES,
+            deleted_at__isnull=True,
         ).count()
         for engine_name in SongJob.Engine.values
     }
@@ -193,6 +222,12 @@ def dispatch_jobs():
 
 
 def _poll_one(job):
+    if not SongJob.objects.filter(
+        pk=job.pk,
+        deleted_at__isnull=True,
+        user__is_active=True,
+    ).exists():
+        return
     if job.submitted_at and timezone.now() - job.submitted_at > timedelta(
         seconds=settings.MUREKA_JOB_TIMEOUT_SECONDS
     ):
@@ -218,6 +253,12 @@ def _poll_one(job):
             exc.trace_id,
         )
         return
+    if not SongJob.objects.filter(
+        pk=job.pk,
+        deleted_at__isnull=True,
+        user__is_active=True,
+    ).exists():
+        return
     SongJob.objects.filter(pk=job.pk).update(
         provider_status=result.provider_status[:20],
         provider_trace_id=getattr(engine, "last_trace_id", None)
@@ -228,6 +269,8 @@ def _poll_one(job):
     if result.status == "streaming":
         with transaction.atomic():
             current = SongJob.objects.select_for_update().get(pk=job.pk)
+            if current.deleted_at:
+                return
             if current.status not in {
                 SongJob.Status.READY,
                 SongJob.Status.PARTIAL,
@@ -278,11 +321,27 @@ def _poll_one(job):
         )
 
 
+def recheck_job_status(job_id):
+    job = SongJob.objects.filter(
+        pk=job_id,
+        status__in=[SongJob.Status.RUNNING, SongJob.Status.STREAMING],
+        provider_task_id__isnull=False,
+        deleted_at__isnull=True,
+        user__is_active=True,
+    ).first()
+    if job is None:
+        return False
+    _poll_one(job)
+    return True
+
+
 @shared_task(name="apps.songs.poll_jobs")
 def poll_jobs():
     jobs = list(
         SongJob.objects.filter(
             status__in=[SongJob.Status.RUNNING, SongJob.Status.STREAMING],
+            deleted_at__isnull=True,
+            user__is_active=True,
         ).order_by("submitted_at", "created_at")[:50]
     )
     for job in jobs:
@@ -342,27 +401,34 @@ def refresh_mureka_account():
 
 @shared_task(bind=True, max_retries=5, name="apps.songs.store_version")
 def store_version(self, job_id, index, url, duration_ms=None):
+    stored_key = None
     try:
         job = SongJob.objects.select_related("user").get(pk=job_id)
         version = SongVersion.objects.get(job=job, index=index)
-        if version.status == SongVersion.Status.READY:
+        if version.status == SongVersion.Status.READY or job.deleted_at:
             return
-        if not job.deleted_at:
-            version = store_audio_version(job, version, url, duration_ms)
+        version = store_audio_version(job, version, url, duration_ms)
+        stored_key = version.storage_key
         with transaction.atomic():
             locked_job = SongJob.objects.select_for_update().get(pk=job_id)
-            locked_version = SongVersion.objects.select_for_update().get(pk=version.pk)
+            locked_version = (
+                SongVersion.objects.select_for_update().filter(pk=version.pk).first()
+            )
+            if locked_version is None:
+                if stored_key:
+                    default_storage.delete(stored_key)
+                return
             if locked_version.status == SongVersion.Status.READY:
+                if stored_key and stored_key != locked_version.storage_key:
+                    default_storage.delete(stored_key)
+                return
+            if locked_job.deleted_at or not locked_job.user.is_active:
+                if stored_key:
+                    default_storage.delete(stored_key)
                 return
             locked_version.status = SongVersion.Status.READY
-            if locked_job.deleted_at:
-                if version.storage_key:
-                    default_storage.delete(version.storage_key)
-                locked_version.storage_key = None
-                locked_version.size_bytes = None
-            else:
-                locked_version.storage_key = version.storage_key
-                locked_version.size_bytes = version.size_bytes
+            locked_version.storage_key = version.storage_key
+            locked_version.size_bytes = version.size_bytes
             locked_version.duration_ms = duration_ms
             locked_version.save(
                 update_fields=[
@@ -373,6 +439,10 @@ def store_version(self, job_id, index, url, duration_ms=None):
                 ]
             )
         finalize_job(job_id)
+    except SongVersion.DoesNotExist:
+        if stored_key:
+            default_storage.delete(stored_key)
+        return
     except Exception as exc:
         if self.request.retries < self.max_retries:
             raise self.retry(

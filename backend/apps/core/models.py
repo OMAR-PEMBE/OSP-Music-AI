@@ -123,3 +123,24 @@ class AppSettings(models.Model):
 def get_app_settings():
     settings_obj, _created = AppSettings.objects.get_or_create(pk=1)
     return settings_obj
+
+
+class SupportMessage(models.Model):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="support_messages",
+    )
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    message = models.TextField(max_length=2000)
+    created_at = models.DateTimeField(auto_now_add=True)
+    handled = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-created_at", "-id"]
+
+    def __str__(self):
+        return f"Support message from {self.email}"

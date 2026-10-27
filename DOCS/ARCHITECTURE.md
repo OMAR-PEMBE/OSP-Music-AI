@@ -30,7 +30,7 @@ What we build is defined in [PRD.md](PRD.md). This file defines **how the pieces
 | Layer | Choice |
 |---|---|
 | Web | Next.js 15 (App Router), React, TypeScript, Tailwind CSS |
-| Web libraries | TanStack Query (API data), next-intl (sw/en), next-themes (light/dark) |
+| Web libraries | TanStack Query (API data), next-intl (English-only messages), next-themes (light/dark) |
 | Backend | Python 3.12, Django 5, Django REST Framework |
 | Auth | django-allauth (headless mode, browser sessions): signup, email verification, password reset |
 | Database | PostgreSQL 16 |
@@ -69,11 +69,10 @@ osp-music-ai/
 │   │   └── fake.py            # FakeEngine for tests/dev (no cost)
 │   └── tests/
 └── web/
-    ├── app/[locale]/          # pages: /, /login, /signup, /create, /music, /wallet, /settings, /support, /legal/*
+    ├── app/                   # pages: /, /login, /signup, /create, /music, /wallet, /settings, /support, /legal/*
     ├── components/
     ├── lib/api.ts             # typed API client
-    ├── messages/sw.json       # Swahili strings
-    ├── messages/en.json       # English strings
+    ├── messages/en.json       # English-only interface strings
     └── public/manifest.json   # PWA
 ```
 

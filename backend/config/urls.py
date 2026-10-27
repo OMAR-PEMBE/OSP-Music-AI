@@ -3,9 +3,15 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from apps.dashboard.views import daily_summary
 from apps.payments.views import snippe_webhook_view
 
 urlpatterns = [
+    path(
+        "admin/summary/",
+        admin.site.admin_view(daily_summary),
+        name="admin-daily-summary",
+    ),
     path("admin/", admin.site.urls),
     path("accounts/", include("allauth.urls")),
     path("api/auth/", include("allauth.headless.urls")),

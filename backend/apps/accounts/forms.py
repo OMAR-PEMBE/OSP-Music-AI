@@ -20,10 +20,10 @@ class OSPSignupForm(forms.Form):
     def clean_display_name(self):
         display_name = self.cleaned_data["display_name"].strip()
         if not DISPLAY_NAME_RE.fullmatch(display_name):
-            raise forms.ValidationError("Tumia herufi, namba au _ (alama 3 hadi 30).")
+            raise forms.ValidationError("Use 3 to 30 letters, numbers, or underscores.")
         user_model = get_user_model()
         if user_model.objects.filter(display_name__iexact=display_name).exists():
-            raise forms.ValidationError("Jina hili la kuonekana tayari linatumika.")
+            raise forms.ValidationError("This display name is already in use.")
         return display_name
 
     def signup(self, request, user):

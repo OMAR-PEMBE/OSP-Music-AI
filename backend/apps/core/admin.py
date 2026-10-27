@@ -1,6 +1,67 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 
-from .models import AppSettings
+from apps.songs.models import SongJob
+from apps.songs.tasks import recheck_job_status
+
+from .models import AppSettings, SupportMessage
+
+
+@admin.register(SongJob)
+class SongJobAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "title",
+        "user",
+        "engine",
+        "status",
+        "price_tzs",
+        "created_at",
+        "finished_at",
+        "failure_reason",
+    )
+    list_filter = ("status", "engine", "created_at", "finished_at")
+    search_fields = (
+        "id",
+        "title",
+        "idea",
+        "provider_task_id",
+        "user__email",
+        "user__display_name",
+    )
+    readonly_fields = tuple(field.name for field in SongJob._meta.fields)
+    actions = ("recheck_status",)
+    ordering = ("-created_at",)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related("user")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @admin.action(description="Re-check status (poll only; never resubmits)")
+    def recheck_status(self, request, queryset):
+        checked = 0
+        skipped = 0
+        for job_id in queryset.values_list("pk", flat=True).iterator():
+            if recheck_job_status(job_id):
+                checked += 1
+            else:
+                skipped += 1
+
+        if checked:
+            self.message_user(
+                request,
+                f"Polled {checked} job(s). No generation was resubmitted.",
+            )
+        if skipped:
+            self.message_user(
+                request,
+                f"Skipped {skipped} job(s) without an active provider task.",
+                level=messages.WARNING,
+            )
 
 
 @admin.register(AppSettings)
@@ -66,3 +127,11 @@ class AppSettingsAdmin(admin.ModelAdmin):
             "DOCS/SUNO.md §3 contains the official API contract."
         )
         return form
+
+
+@admin.register(SupportMessage)
+class SupportMessageAdmin(admin.ModelAdmin):
+    list_display = ("created_at", "name", "email", "handled")
+    list_filter = ("handled", "created_at")
+    search_fields = ("name", "email", "message")
+    readonly_fields = ("user", "name", "email", "message", "created_at")

@@ -5,24 +5,26 @@ import { Icon } from "@/components/icon";
 import { useLocaleMessages } from "@/components/locale-provider";
 
 export function MarketingHeader() {
-  const { t, locale, setLocale, resolvedTheme, toggleTheme } =
-    useLocaleMessages();
+  const { t, resolvedTheme, toggleTheme } = useLocaleMessages();
   return (
     <header className="marketing-header">
       <Link className="brand-lockup" href="/" aria-label={t("brand")}>
-        <span className="brand-glyph">
-          <Icon name="music" />
+        <span className="brand-glyph" aria-hidden="true">
+          <i />
+          <i />
+          <i />
+          <i />
+          <i />
         </span>
         <span>{t("brand")}</span>
       </Link>
+      <nav className="marketing-nav" aria-label={t("landingNavigation")}>
+        <Link href="/#top">{t("home")}</Link>
+        <Link href="/create">{t("create")}</Link>
+        <Link href="/#pricing">{t("priceLabel")}</Link>
+        <Link href="/faq">{t("help")}</Link>
+      </nav>
       <div className="marketing-actions">
-        <button
-          className="icon-button compact"
-          onClick={() => setLocale(locale === "sw" ? "en" : "sw")}
-          aria-label={t("changeLanguage")}
-        >
-          {locale === "sw" ? "EN" : "SW"}
-        </button>
         <button
           className="icon-button"
           onClick={toggleTheme}

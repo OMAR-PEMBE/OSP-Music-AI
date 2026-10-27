@@ -10,7 +10,7 @@ import { useLocaleMessages } from "@/components/locale-provider";
 import { api, ApiError, formatDate, type SongJob } from "@/lib/api";
 
 export function SongDetailPage({ id }: { id: string }) {
-  const { t, locale } = useLocaleMessages();
+  const { t } = useLocaleMessages();
   const router = useRouter();
   const [song, setSong] = useState<SongJob | null>(null);
   const [title, setTitle] = useState("");
@@ -137,7 +137,7 @@ export function SongDetailPage({ id }: { id: string }) {
             </div>
             <div className="detail-copy">
               <p className="eyebrow">
-                {t("songDetail")} / {formatDate(song.created_at, locale)}
+                {t("songDetail")} / {formatDate(song.created_at)}
               </p>
               <h1>{song.title || t("sampleTitle")}</h1>
               <SongStatus status={song.status} />

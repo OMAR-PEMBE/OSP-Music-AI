@@ -56,23 +56,23 @@ Prompt template for the agent:
 ### M5 — Web app: core screens
 **Read:** PRD 4.2–4.5, 4.8, API (all)
 - Pages: landing, signup, login, verify email, forgot/reset password.
-- App shell: header (balance, language, theme, account), bottom nav on mobile (Create, My Music, Wallet, Settings).
+- App shell: header (balance, theme, account), bottom nav on mobile (Create, My Music, Wallet, Settings).
 - Create screen (lyrics helper, price + balance, Generate → status card with live player for `stream_url`).
 - My Music (list, detail, play A/B, download, rename, delete, red dot).
 - Wallet (balance, presets + custom, phone input, "approve on your phone" state, history).
 - **Done when:** the whole flow works in a phone-sized browser: sign up → top up (mocked) → create → listen → download.
 
-### M6 — Language, theme, PWA
+### M6 — English interface, theme, PWA
 **Read:** PRD §3, ARCHITECTURE §3 (web)
-- next-intl with `sw` (default) and `en`; every visible string in `messages/*.json`; language saved to profile.
+- English-only interface using `messages/en.json`; generated song language remains independently selectable.
 - Light/dark/system theme saved to profile, no flash on load.
 - PWA manifest + icons + install prompt.
-- **Done when:** switching language/theme works on every screen and persists after logout/login.
+- **Done when:** the English interface and theme work on every screen and persist after logout/login.
 
 ### M7 — Support, legal, account deletion
 **Read:** PRD 4.6–4.7, DATABASE §6, API §4, §8
 - Floating WhatsApp button (from `support_whatsapp`), contact form, FAQ page.
-- Terms, Privacy, Refund pages (Swahili + English; Omar supplies/approves final text).
+- Terms, Privacy, Refund pages (English; Omar supplies/approves final text).
 - Full account deletion per DATABASE §6 with password confirmation and warning about balance.
 - **Done when:** deleting an account removes songs/files, blocks login, and keeps anonymized ledger/payments.
 

@@ -3,6 +3,21 @@ from django.contrib import admin
 from .models import Payment, WebhookEvent
 
 
+class NeedsReviewFilter(admin.SimpleListFilter):
+    title = "needs review"
+    parameter_name = "needs_review"
+
+    def lookups(self, request, model_admin):
+        return (("yes", "Needs review"), ("no", "No review needed"))
+
+    def queryset(self, request, queryset):
+        if self.value() == "yes":
+            return queryset.filter(failure_reason="amount_mismatch")
+        if self.value() == "no":
+            return queryset.exclude(failure_reason="amount_mismatch")
+        return queryset
+
+
 @admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
     list_display = (
@@ -14,7 +29,7 @@ class PaymentAdmin(admin.ModelAdmin):
         "snippe_reference",
         "created_at",
     )
-    list_filter = ("status", "failure_reason", "created_at")
+    list_filter = ("status", "failure_reason", "created_at", NeedsReviewFilter)
     search_fields = ("short_id", "snippe_reference", "user__email")
     readonly_fields = (
         "id",

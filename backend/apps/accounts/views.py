@@ -3,15 +3,21 @@ import uuid
 from django.contrib.auth import logout
 from django.core.files.storage import default_storage
 from django.db import DatabaseError, transaction
-from django.utils import timezone
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import APIException, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import MeSerializer
+from .services import AccountDeletionStorageError, delete_account
+
+
+class AccountDeletionUnavailable(APIException):
+    status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    default_code = "account_deletion_failed"
+
 
 MAX_AVATAR_BYTES = 2 * 1024 * 1024
 AVATAR_TYPES = {
@@ -41,7 +47,7 @@ def avatar_format(upload):
         "webp": header.startswith(b"RIFF") and header[8:12] == b"WEBP",
     }
     if kind is None or not valid[kind]:
-        raise ValidationError({"avatar": ["Tumia picha ya JPG, PNG au WEBP."]})
+        raise ValidationError({"avatar": ["Use a JPG, PNG, or WEBP image."]})
     return "jpg" if kind == "jpeg" else kind
 
 
@@ -70,7 +76,7 @@ class AvatarView(APIView):
     def post(self, request):
         upload = request.FILES.get("avatar")
         if upload is None:
-            raise ValidationError({"avatar": ["Chagua picha ya wasifu."]})
+            raise ValidationError({"avatar": ["Choose a profile picture."]})
 
         extension = avatar_format(upload)
         key = f"avatars/{request.user.pk}/{uuid.uuid4().hex}.{extension}"
@@ -97,39 +103,16 @@ class DeleteAccountView(APIView):
 
     def post(self, request):
         password = request.data.get("password", "")
-        if not isinstance(password, str) or not request.user.check_password(password):
-            raise ValidationError({"password": ["Nenosiri si sahihi."]})
-
-        user = request.user
-        user_id = user.pk
-        old_avatar = user.avatar
-        # DATABASE.md limits display names to 30 chars. A UUID hex prefix gives
-        # a unique 88-bit anonymized name while respecting that limit.
-        suffix = user_id.hex[:22]
-        user.email = f"deleted-{user_id}@deleted.local"
-        user.first_name = ""
-        user.last_name = ""
-        user.display_name = f"deleted-{suffix}"
-        user.avatar = None
-        user.phone_last_used = None
-        user.is_active = False
-        user.deleted_at = timezone.now()
-        user.save(
-            update_fields=[
-                "email",
-                "first_name",
-                "last_name",
-                "display_name",
-                "avatar",
-                "phone_last_used",
-                "is_active",
-                "deleted_at",
-            ]
-        )
-        from allauth.account.models import EmailAddress
-
-        EmailAddress.objects.filter(user=user).delete()
-        if old_avatar:
-            default_storage.delete(old_avatar)
+        if not isinstance(password, str):
+            raise ValidationError({"password": ["The password is incorrect."]})
+        try:
+            deleted = delete_account(request.user, password)
+        except AccountDeletionStorageError:
+            raise AccountDeletionUnavailable(
+                detail="Account files could not be deleted. Please try again.",
+                code="account_deletion_failed",
+            )
+        if not deleted:
+            raise ValidationError({"password": ["The password is incorrect."]})
         logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)

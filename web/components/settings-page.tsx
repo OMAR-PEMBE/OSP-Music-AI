@@ -2,14 +2,15 @@
 
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { Icon } from "@/components/icon";
 import { useLocaleMessages } from "@/components/locale-provider";
 import { api, ApiError, type Me } from "@/lib/api";
 
 export function SettingsPage() {
-  const { t, locale, setLocale, theme, setTheme, preferenceError } =
-    useLocaleMessages();
+  const router = useRouter();
+  const { t, theme, setTheme, preferenceError } = useLocaleMessages();
   const [profile, setProfile] = useState<Me | null>(null);
   const [name, setName] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -17,6 +18,9 @@ export function SettingsPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -79,6 +83,25 @@ export function SettingsPage() {
     } finally {
       setBusy(false);
       event.target.value = "";
+    }
+  }
+
+  async function confirmAccountDeletion(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setDeleteError("");
+    try {
+      await api("/api/me/delete", {
+        method: "POST",
+        body: { password: deletePassword },
+      });
+      localStorage.removeItem("osp-theme");
+      router.replace("/");
+      router.refresh();
+    } catch {
+      setDeleteError(t("deleteAccountError"));
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -191,30 +214,6 @@ export function SettingsPage() {
           </div>
           <div className="setting-row">
             <div>
-              <strong>{t("languageSetting")}</strong>
-              <small>{t("language")}</small>
-            </div>
-            <div className="segmented-control">
-              <button
-                type="button"
-                className={locale === "sw" ? "selected" : ""}
-                onClick={() => setLocale("sw")}
-                aria-pressed={locale === "sw"}
-              >
-                SW
-              </button>
-              <button
-                type="button"
-                className={locale === "en" ? "selected" : ""}
-                onClick={() => setLocale("en")}
-                aria-pressed={locale === "en"}
-              >
-                EN
-              </button>
-            </div>
-          </div>
-          <div className="setting-row">
-            <div>
               <strong>{t("theme")}</strong>
               <small>
                 {t(
@@ -269,6 +268,63 @@ export function SettingsPage() {
           </div>
         </section>
       </div>
+      <section className="panel account-deletion">
+        <h2>{t("deleteAccount")}</h2>
+        <p>{t("deleteAccountWarning")}</p>
+        {!deleteOpen ? (
+          <button
+            className="button button-danger"
+            type="button"
+            onClick={() => setDeleteOpen(true)}
+          >
+            {t("deleteAccount")}
+          </button>
+        ) : (
+          <form
+            className="form-stack"
+            onSubmit={confirmAccountDeletion}
+            autoComplete="off"
+          >
+            <p>{t("deleteAccountConfirm")}</p>
+            {deleteError && (
+              <div className="feedback error" role="alert">
+                {deleteError}
+              </div>
+            )}
+            <label className="field">
+              <span>{t("deleteAccountPassword")}</span>
+              <input
+                autoComplete="current-password"
+                onChange={(event) => setDeletePassword(event.target.value)}
+                required
+                type="password"
+                value={deletePassword}
+              />
+            </label>
+            <div className="account-deletion-actions">
+              <button
+                className="button button-danger"
+                disabled={busy}
+                type="submit"
+              >
+                {busy ? t("deletingAccount") : t("deleteAccountButton")}
+              </button>
+              <button
+                className="button button-outline"
+                disabled={busy}
+                onClick={() => {
+                  setDeleteOpen(false);
+                  setDeletePassword("");
+                  setDeleteError("");
+                }}
+                type="button"
+              >
+                {t("deleteAccountCancel")}
+              </button>
+            </div>
+          </form>
+        )}
+      </section>
     </AppShell>
   );
 }

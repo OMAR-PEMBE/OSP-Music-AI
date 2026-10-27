@@ -1,0 +1,45 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+  <h1>Daily summary — {{ summary_date }}</h1>
+
+  {% if mureka_balance_is_low %}
+    <div class="messagelist">
+      <div class="error">Mureka balance is below the configured low-balance threshold.</div>
+    </div>
+  {% elif not mureka_balance_usd %}
+    <div class="messagelist">
+      <div class="warning">Mureka balance is not available yet.</div>
+    </div>
+  {% endif %}
+
+  {% if wallet_integrity_warning_count %}
+    <div class="messagelist">
+      <div class="error">
+        Wallet integrity warnings: {{ wallet_integrity_warning_count }} wallet(s) do not match their ledger.
+      </div>
+    </div>
+  {% else %}
+    <p class="quiet">Wallet integrity: no mismatches detected.</p>
+  {% endif %}
+
+  <div class="module">
+    <table>
+      <tbody>
+        <tr><th scope="row">New users</th><td>{{ new_users }}</td></tr>
+        <tr><th scope="row">Confirmed top-ups</th><td>TZS {{ topups_tzs }}</td></tr>
+        <tr><th scope="row">Songs generated</th><td>{{ songs_generated }}</td></tr>
+        <tr><th scope="row">Jobs with failed versions</th><td>{{ jobs_with_failed_versions }}</td></tr>
+        <tr><th scope="row">Song refunds</th><td>TZS {{ refunds_tzs }}</td></tr>
+        <tr><th scope="row">Estimated Mureka cost</th><td>TZS {{ estimated_mureka_cost_tzs }}</td></tr>
+        <tr><th scope="row">Estimated profit</th><td>TZS {{ estimated_profit_tzs }}</td></tr>
+        <tr>
+          <th scope="row">Mureka balance</th>
+          <td>{% if mureka_balance_usd %}USD {{ mureka_balance_usd }}{% else %}Unavailable{% endif %}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

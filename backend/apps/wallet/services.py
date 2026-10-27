@@ -17,13 +17,13 @@ BIGINT_MIN = -(2**63)
 
 class InsufficientBalance(APIException):
     status_code = 402
-    default_detail = "Salio halitoshi."
+    default_detail = "Insufficient wallet balance."
     default_code = "insufficient_balance"
 
 
 class IdempotencyConflict(APIException):
     status_code = 409
-    default_detail = "Ufunguo huu tayari umetumika kwa muamala mwingine."
+    default_detail = "This key has already been used for another transaction."
     default_code = "duplicate_request"
 
 

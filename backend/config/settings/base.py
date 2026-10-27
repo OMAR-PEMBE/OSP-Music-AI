@@ -54,7 +54,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-            ]
+            ],
         },
     }
 ]
@@ -90,8 +90,8 @@ HEADLESS_FRONTEND_URLS = {
     "account_signup": f"{os.getenv('PUBLIC_BASE_URL', 'http://localhost:3000')}/account/signup",
 }
 AUTH_PASSWORD_VALIDATORS = []
-LANGUAGE_CODE = "sw"
-LANGUAGES = [("sw", "Kiswahili"), ("en", "English")]
+LANGUAGE_CODE = "en"
+LANGUAGES = [("en", "English")]
 TIME_ZONE = "Africa/Dar_es_Salaam"
 USE_I18N = True
 USE_TZ = True
@@ -167,4 +167,5 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
     "EXCEPTION_HANDLER": "config.api_errors.api_exception_handler",
+    "DEFAULT_THROTTLE_RATES": {"support": "3/hour"},
 }

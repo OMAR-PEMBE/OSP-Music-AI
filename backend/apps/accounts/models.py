@@ -10,7 +10,7 @@ from .fields import CICharField, CIEmailField
 
 display_name_validator = RegexValidator(
     regex=r"^[A-Za-z0-9_]{3,30}$",
-    message="Tumia herufi, namba au _ (alama 3 hadi 30).",
+    message="Use 3 to 30 letters, numbers, or underscores.",
 )
 
 
@@ -52,8 +52,8 @@ class User(AbstractUser):
     avatar = models.CharField(max_length=255, null=True, blank=True)
     language = models.CharField(
         max_length=2,
-        choices=[("sw", "Kiswahili"), ("en", "English")],
-        default="sw",
+        choices=[("en", "English")],
+        default="en",
     )
     theme = models.CharField(
         max_length=6,

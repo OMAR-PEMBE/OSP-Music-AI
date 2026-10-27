@@ -17,71 +17,35 @@ export function LandingPage() {
   }, []);
 
   return (
-    <div className="marketing-page">
+    <div className="marketing-page" id="top">
       <MarketingHeader />
       <main>
-        <section className="hero-section">
-          <div className="hero-copy">
-            <p className="eyebrow">
-              <span className="eyebrow-dot" />
-              {t("heroEyebrow")}
+        <section className="landing-hero">
+          <div className="landing-hero-copy">
+            <p className="landing-badge">
+              <Icon name="sparkle" /> {t("heroEyebrow")}
             </p>
-            <h1>{t("heroTitle")}</h1>
-            <p className="hero-description">{t("heroBody")}</p>
-            <div className="hero-actions">
-              <Link className="button button-lime" href="/signup">
-                {t("getStarted")} <Icon name="arrow" />
-              </Link>
-              <span className="hero-trust">
-                <Icon name="check" /> {t("priceUnit")}
-              </span>
-            </div>
-            <div className="hero-proof">
-              <div className="proof-avatars">
-                <span>O</span>
-                <span>A</span>
-                <span>M</span>
-              </div>
-              <p>
-                <strong>{formatTzs(price)}</strong>
-                <span>{t("priceLabel").toLowerCase()}</span>
-              </p>
-            </div>
+            <h1>
+              {t("landingHeroPrefix")} <span>{t("landingHeroAccent")}</span>
+            </h1>
+            <p className="landing-hero-description">{t("heroBody")}</p>
+            <Link className="button landing-primary-button" href="/signup">
+              {t("landingHeroCta")} <Icon name="arrow" />
+            </Link>
           </div>
-          <div className="hero-art" aria-label={t("sampleTitle")}>
-            <div className="art-orbit orbit-one" />
-            <div className="art-orbit orbit-two" />
-            <div className="art-star">
-              <Icon name="sparkle" />
+          <div className="landing-hero-art" aria-hidden="true">
+            <div className="landing-wave landing-wave-left">
+              {Array.from({ length: 25 }, (_, index) => (
+                <i key={index} />
+              ))}
             </div>
-            <div className="art-note note-one">♫</div>
-            <div className="art-note note-two">♪</div>
-            <div className="art-disc">
-              <div className="disc-grooves">
-                <span />
-                <span />
-                <span />
-              </div>
-              <div className="disc-center">
-                <Icon name="music" />
-              </div>
+            <div className="landing-wave landing-wave-right">
+              {Array.from({ length: 25 }, (_, index) => (
+                <i key={index} />
+              ))}
             </div>
-            <div className="art-caption">
-              <span className="live-dot" /> {t("soundStudio")}
-            </div>
-            <div className="art-card">
-              <span className="art-card-icon">
-                <Icon name="play" />
-              </span>
-              <div>
-                <strong>{t("sampleTitle")}</strong>
-                <small>{t("priceUnit")}</small>
-              </div>
-              <span className="waveform">
-                <i />
-                <i />
-                <i />
-                <i />
+            <div className="landing-app-icon">
+              <span className="brand-glyph">
                 <i />
                 <i />
                 <i />
@@ -92,29 +56,70 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section className="how-section section-wrap" id="how">
-          <div className="section-heading">
-            <p className="eyebrow">01 / {t("howItWorks")}</p>
+        <section className="landing-benefits" aria-label={t("landingBenefits")}>
+          {(
+            [
+              ["music", "landingBenefitIdea", "landingBenefitIdeaBody"],
+              ["settings", "landingBenefitStyles", "landingBenefitStylesBody"],
+              [
+                "sparkle",
+                "landingBenefitVersions",
+                "landingBenefitVersionsBody",
+              ],
+              ["check", "landingBenefitPrivate", "landingBenefitPrivateBody"],
+            ] as const
+          ).map(([icon, title, body]) => (
+            <article className="landing-benefit" key={title}>
+              <Icon name={icon} />
+              <div>
+                <h2>{t(title)}</h2>
+                <p>{t(body)}</p>
+              </div>
+            </article>
+          ))}
+        </section>
+
+        <section className="landing-how" id="how">
+          <div className="landing-section-heading">
             <h2>{t("howItWorks")}</h2>
+            <p>{t("landingStepsIntro")}</p>
           </div>
-          <div className="steps-grid">
+          <div className="landing-step-grid">
             {(
               [
-                ["01", "stepOne", "stepOneBody", "sparkle"],
+                ["01", "stepOne", "stepOneBody", "music"],
                 ["02", "stepTwo", "stepTwoBody", "settings"],
                 ["03", "stepThree", "stepThreeBody", "music"],
               ] as const
             ).map(([number, title, body, icon]) => (
-              <article className="step-card" key={number}>
-                <div className="step-top">
-                  <span>{number}</span>
-                  <Icon name={icon} />
-                </div>
-                <h3>{t(title)}</h3>
-                <p>{t(body)}</p>
-              </article>
+              <div className="landing-step-wrap" key={number}>
+                <article className="landing-step-card">
+                  <span className="landing-step-icon">
+                    <Icon name={icon} />
+                  </span>
+                  <div>
+                    <h3>
+                      {number}. {t(title)}
+                    </h3>
+                    <p>{t(body)}</p>
+                  </div>
+                </article>
+                {number !== "03" && (
+                  <Icon
+                    className="landing-step-arrow"
+                    name="arrow"
+                    aria-hidden="true"
+                  />
+                )}
+              </div>
             ))}
           </div>
+          <Link
+            className="button landing-primary-button landing-bottom-cta"
+            href="/signup"
+          >
+            {t("landingBottomCta")} <Icon name="arrow" />
+          </Link>
         </section>
 
         <section className="feature-section">
@@ -152,7 +157,7 @@ export function LandingPage() {
           </div>
         </section>
 
-        <section className="price-band">
+        <section className="price-band" id="pricing">
           <div>
             <p className="eyebrow">03 / {t("priceLabel")}</p>
             <h2>{formatTzs(price)}</h2>
@@ -185,8 +190,12 @@ export function LandingPage() {
       </main>
       <footer className="marketing-footer" id="footer">
         <Link className="brand-lockup" href="/">
-          <span className="brand-glyph">
-            <Icon name="music" />
+          <span className="brand-glyph" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+            <i />
+            <i />
           </span>
           <span>{t("brand")}</span>
         </Link>
@@ -194,7 +203,11 @@ export function LandingPage() {
         <div className="footer-links">
           <Link href="/signup">{t("getStarted")}</Link>
           <Link href="/login">{t("login")}</Link>
-          <a href="#faq">{t("help")}</a>
+          <Link href="/faq">{t("help")}</Link>
+          <Link href="/contact">{t("contactUs")}</Link>
+          <Link href="/terms">{t("termsLink")}</Link>
+          <Link href="/privacy">{t("privacyLink")}</Link>
+          <Link href="/refunds">{t("refundLink")}</Link>
         </div>
         <small>{t("copyright")}</small>
       </footer>

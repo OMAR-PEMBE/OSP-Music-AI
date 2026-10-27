@@ -73,7 +73,5 @@ class MeSerializer(serializers.ModelSerializer):
             pk=self.instance.pk
         )
         if matches.exists():
-            raise serializers.ValidationError(
-                "Jina hili la kuonekana tayari linatumika."
-            )
+            raise serializers.ValidationError("This display name is already in use.")
         return value

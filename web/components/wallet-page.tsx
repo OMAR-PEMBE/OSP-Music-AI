@@ -32,7 +32,7 @@ type Payment = {
 };
 
 export function WalletPage() {
-  const { t, locale } = useLocaleMessages();
+  const { t } = useLocaleMessages();
   const [config, setConfig] = useState<ApiConfig | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -250,7 +250,7 @@ export function WalletPage() {
               </div>
               <div>
                 <span>{t(`paymentStatus_${payment.status}`)}</span>
-                <strong>{formatDate(payment.created_at, locale)}</strong>
+                <strong>{formatDate(payment.created_at)}</strong>
               </div>
             </div>
           )}
@@ -293,7 +293,7 @@ export function WalletPage() {
                 <div className="transaction-copy">
                   <strong>{t(`transaction_${entry.type}` as never)}</strong>
                   <small>
-                    {entry.song_title || formatDate(entry.created_at, locale)}
+                    {entry.song_title || formatDate(entry.created_at)}
                   </small>
                 </div>
                 <div className="transaction-amount">

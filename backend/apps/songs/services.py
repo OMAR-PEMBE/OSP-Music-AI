@@ -44,6 +44,8 @@ def build_lyrics_prompt(*, genre, language, idea, genre_other=""):
 def finalize_job(job_id):
     with transaction.atomic():
         job = SongJob.objects.select_for_update().get(pk=job_id)
+        if job.deleted_at:
+            return job
         if job.settled_at:
             return job
         versions = list(job.versions.all())
@@ -71,6 +73,8 @@ def finalize_job(job_id):
 def fail_job(job_id, *, reason, provider_status=None, trace_id=None):
     with transaction.atomic():
         job = SongJob.objects.select_for_update().get(pk=job_id)
+        if job.deleted_at:
+            return job
         if job.settled_at:
             return job
         job.failure_reason = reason[:255]

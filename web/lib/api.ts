@@ -110,7 +110,7 @@ export type Me = {
   last_name: string;
   display_name: string;
   avatar_url: string | null;
-  language: "sw" | "en";
+  language: "en";
   theme: "system" | "light" | "dark";
   email_verified: boolean;
   balance_tzs: number;
@@ -162,15 +162,15 @@ export type PageResult<T> = {
 };
 
 export function formatTzs(amount: number): string {
-  return new Intl.NumberFormat("sw-TZ", {
+  return new Intl.NumberFormat("en-TZ", {
     style: "currency",
     currency: "TZS",
     maximumFractionDigits: 0,
   }).format(amount);
 }
 
-export function formatDate(value: string, locale: "sw" | "en" = "sw"): string {
-  return new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-TZ", {
+export function formatDate(value: string): string {
+  return new Intl.DateTimeFormat("en-TZ", {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "Africa/Dar_es_Salaam",

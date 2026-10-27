@@ -29,7 +29,7 @@ Each fact lives in **one** document. If two documents seem to disagree, **stop a
 6. **External APIs:** never call the real Mureka, Suno or Snippe API in automated tests — use `FakeEngine` and mocks. Never automatically resubmit a paid generation. Use only the official Suno API; never invent endpoints — if SUNO.md §3 is empty, build the skeleton only.
 7. **Tests:** write tests with the code. Don't say tests passed unless you ran them and they passed.
 8. **Small steps:** inspect existing code before changing it; don't rewrite working code unasked.
-9. **User-facing text** goes in `web/messages/sw.json` and `en.json` — Swahili is the default language.
+9. **User-facing text** is English-only and goes in `web/messages/en.json`. Song-language choices (Swahili, English, Mixed) are separate product functionality.
 10. **Docs:** if your change makes a doc wrong, update the doc in the same change.
 
 ## End-of-milestone report

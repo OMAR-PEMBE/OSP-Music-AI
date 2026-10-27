@@ -64,9 +64,9 @@ Returns a CSRF token and sets the `csrftoken` cookie for browser clients before 
 | Endpoint | Purpose |
 |---|---|
 | `GET /api/me` | `{ id, email, first_name, last_name, display_name, avatar_url, language, theme, email_verified, balance_tzs, unseen_songs }` |
-| `PATCH /api/me` | update first_name, last_name, display_name, language, theme |
+| `PATCH /api/me` | update first_name, last_name, display_name, theme; language is fixed to `en` |
 | `POST /api/me/avatar` | multipart, ≤ 2 MB, jpg/png/webp |
-| `POST /api/me/delete` | body `{ "password": "..." }` → deletes per DATABASE.md §6, logs out → 204 |
+| `POST /api/me/delete` | body `{ "password": "..." }` → deletes/anonymizes per DATABASE.md §6, logs out → 204; wrong password → 400, storage deletion failure → 503 |
 
 ## 5. Lyrics
 
@@ -119,7 +119,7 @@ Out `201`: the job object (below). Errors: `402 insufficient_balance`, `503 gene
 ## 8. Support
 
 ### `POST /api/support` (login optional)
-`{ name, email, message }` (message 10–2,000 chars) → 201. Throttle: 3/hour per IP. Emails `support_email`.
+`{ name, email, message }` (message 10–2,000 chars) → 201 after the message is stored and emailed to `support_email`; authenticated submissions are linked to the account. Throttle: 3/hour per IP. Returns 503 when support email delivery is unavailable; a failed delivery is logged and the stored message remains available to staff.
 
 ## 9. Webhooks (not called by the web app)
 

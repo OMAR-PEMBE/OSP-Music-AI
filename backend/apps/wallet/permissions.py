@@ -5,7 +5,7 @@ from rest_framework.permissions import BasePermission
 
 class EmailNotVerified(APIException):
     status_code = 403
-    default_detail = "Thibitisha barua pepe yako kabla ya kutumia pochi."
+    default_detail = "Verify your email before using the wallet."
     default_code = "email_not_verified"
 
 

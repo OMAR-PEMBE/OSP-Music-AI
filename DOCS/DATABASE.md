@@ -15,7 +15,7 @@ Money rules live in [WALLET.md](WALLET.md). Job rules live in [MUREKA.md](MUREKA
 | last_name | varchar(60) | required |
 | display_name | citext UNIQUE | 3–30 chars, letters/numbers/_ |
 | avatar | varchar(255) null | R2 key, optional |
-| language | varchar(2) | `sw` (default) or `en` |
+| language | varchar(2) | `en` (English-only interface preference) |
 | theme | varchar(6) | `system` (default), `light`, `dark` |
 | phone_last_used | varchar(15) null | last Snippe number, for convenience |
 | is_active, is_staff | bool | Django defaults |

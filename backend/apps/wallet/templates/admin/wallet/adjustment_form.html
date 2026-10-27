@@ -1,0 +1,14 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <h1>{{ title }}</h1>
+  <p>Wallet: {{ wallet.user }} — current balance {{ wallet.balance_tzs }} TZS</p>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="hidden" name="action" value="adjust_balance">
+    <input type="hidden" name="_selected_action" value="{{ wallet.pk }}">
+    <button type="submit" name="apply_adjustment" value="1">Apply adjustment</button>
+    <a href="../">Cancel</a>
+  </form>
+{% endblock %}

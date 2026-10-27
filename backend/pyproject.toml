@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "osp-music-ai-backend"
+version = "0.1.0"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+  "Django>=5.0,<6.0",
+  "djangorestframework>=3.15,<4.0",
+  "django-allauth[headless]>=65.20,<66.0",
+  "django-storages[s3]>=1.14,<2.0",
+  "celery[redis]>=5.4,<6.0",
+  "dj-database-url>=2.2,<3.0",
+  "psycopg[binary]>=3.2,<4.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-django>=4.8", "ruff>=0.6", "black>=24.0"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["config*", "apps*", "engines*"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.dev"
+python_files = ["test_*.py", "*_tests.py"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+extend-ignore = ["EXE002", "RUF012"]
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]

@@ -11,9 +11,9 @@ Django REST Framework, JSON, all under `/api/` on the same domain as the web app
 - **Pagination:** `?page=1` → `{ "results": [...], "next": 2 | null, "count": 37 }`, page size 20.
 - **Errors:** always
   ```json
-  { "error": { "code": "insufficient_balance", "message": "Salio halitoshi", "fields": {} } }
+  { "error": { "code": "insufficient_balance", "message": "Insufficient wallet balance.", "fields": {} } }
   ```
-  `message` is in the user's language (`sw`/`en`). `fields` holds per-field validation errors.
+  `message` is always English. `fields` holds per-field validation errors.
 
 | HTTP | code examples |
 |---|---|
@@ -63,7 +63,7 @@ Returns a CSRF token and sets the `csrftoken` cookie for browser clients before 
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /api/me` | `{ id, email, first_name, last_name, display_name, avatar_url, language, theme, email_verified, balance_tzs, unseen_songs }` |
+| `GET /api/me` | `{ id, email, first_name, last_name, display_name, avatar_url, language: "en", theme, email_verified, balance_tzs, unseen_songs }` |
 | `PATCH /api/me` | update first_name, last_name, display_name, theme; language is fixed to `en` |
 | `POST /api/me/avatar` | multipart, ≤ 2 MB, jpg/png/webp |
 | `POST /api/me/delete` | body `{ "password": "..." }` → deletes/anonymizes per DATABASE.md §6, logs out → 204; wrong password → 400, storage deletion failure → 503 |

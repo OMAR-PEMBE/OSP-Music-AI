@@ -24,7 +24,7 @@ VPS: Contabo, ~200 GB SSD, ~11 GB RAM, **already running two other systems** (on
 | api | `./backend` (gunicorn, 3 workers) | 768 MB | listens 8000 inside network |
 | worker | `./backend` (`celery worker -c 4`) | 512 MB | |
 | beat | `./backend` (`celery beat`) | 128 MB | exactly ONE instance |
-| db | `postgres:16-alpine` | 1 GB | volume `osp_pgdata` |
+| db | `postgres:16-alpine` | 1 GB | private project-scoped volume |
 | redis | `redis:7-alpine` (`--maxmemory 128mb`) | 192 MB | no persistence needed |
 
 Total ≈ 3.1 GB — fits next to the existing systems. Check `free -h` after start.
@@ -36,60 +36,46 @@ api:  ports: ["127.0.0.1:8100:8000"]
 ```
 (Pick other ports if 3100/8100 are taken — check `ss -tulpn`.)
 
-Every service: `restart: unless-stopped`, healthcheck, and log rotation:
-```yaml
-logging: { driver: json-file, options: { max-size: "10m", max-file: "3" } }
+Every long-running service has a healthcheck, restart policy, and bounded logs.
+Postgres and Redis have no published ports. The API and web bind to loopback only.
+
+Create the host directories before the first start so the non-root API user can
+write static files and backups:
+```bash
+sudo install -d -o 10001 -g 10001 -m 0755 /opt/osp-music/staticfiles
+sudo install -d -o 10001 -g 10001 -m 0750 /opt/osp-music/backups
 ```
 
 ## 3. Reverse proxy and HTTPS
 
-**Case A — nginx already serves 80/443 (most likely):** add one new file `/etc/nginx/sites-available/osp-music` and symlink it. Do not edit the other sites.
+**Case A — nginx already serves 80/443 (most likely):** inspect the VPS first,
+then copy `deploy/nginx/osp-music.conf.example` to
+`/etc/nginx/sites-available/osp-music`, replace the example hostname, and enable
+only this new site. Do not edit the other sites. The config serves collected
+Django static files directly from `/opt/osp-music/staticfiles`.
 
-```nginx
-server {
-  server_name music.example.co.tz;          # real domain
-  client_max_body_size 5m;
-  location /api/      { proxy_pass http://127.0.0.1:8100; include proxy_params; }
-  location /admin/    { proxy_pass http://127.0.0.1:8100; include proxy_params; }
-  location /webhooks/ { proxy_pass http://127.0.0.1:8100; include proxy_params; }
-  location /static/   { proxy_pass http://127.0.0.1:8100; }
-  location /          { proxy_pass http://127.0.0.1:3100; include proxy_params; }
-}
-```
-Then `sudo nginx -t && sudo systemctl reload nginx` (reload, not restart) and `sudo certbot --nginx -d music.example.co.tz`.
+Then run `sudo nginx -t && sudo systemctl reload nginx` (reload, not restart)
+and `sudo certbot --nginx -d <your-domain>`. Confirm DNS already points to the
+VPS before requesting a certificate.
 
-**Case B — nothing on 80/443:** add a `caddy` service to the Compose file with the same routes; Caddy gets HTTPS automatically.
+**Case B — nothing on 80/443:** do not enable a proxy until port availability,
+DNS, and the VPS firewall have been checked. Add a dedicated proxy service only
+after confirming it will not conflict with existing systems.
 
-Django settings for production: `DEBUG=False`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `SECURE_PROXY_SSL_HEADER`, `SESSION_COOKIE_SECURE=True`, `CSRF_COOKIE_SECURE=True`.
+Django production settings fail closed unless HTTPS, host/origin, database,
+Redis, R2, SMTP, Mureka, and Snippe configuration is present. Fake music
+generation is rejected in production.
 
-## 4. Environment variables (`.env.example`)
+## 4. Environment variables (`.env.prod.example`)
 
-```
-# Django
-DJANGO_SECRET_KEY=
-DJANGO_ALLOWED_HOSTS=music.example.co.tz
-PUBLIC_BASE_URL=https://music.example.co.tz
-DATABASE_URL=postgres://osp:<password>@db:5432/osp_music
-REDIS_URL=redis://redis:6379/0
-# Engines
-MUSIC_ENGINE=mureka            # or fake
-MUREKA_API_KEY=
-SUNO_API_KEY=                  # official key from platform.suno.com
-SUNO_BASE_URL=                 # from Suno's official docs
-# Payments
-SNIPPE_API_KEY=
-SNIPPE_WEBHOOK_SECRET=
-# Storage (Cloudflare R2)
-R2_ACCOUNT_ID=
-R2_ACCESS_KEY_ID=
-R2_SECRET_ACCESS_KEY=
-R2_BUCKET=osp-music-songs
-R2_BACKUP_BUCKET=osp-music-backups
-# Email
-EMAIL_HOST= EMAIL_PORT=587 EMAIL_HOST_USER= EMAIL_HOST_PASSWORD= DEFAULT_FROM_EMAIL=
-# Optional
-SENTRY_DSN=
-```
+Copy `.env.prod.example` to `/opt/osp-music/.env`, fill every required value,
+and set permissions to `600`. Generate a fresh Django key and a long random,
+hex-only PostgreSQL password; use the same password in `POSTGRES_PASSWORD` and
+`DATABASE_URL`. Do not copy the repository's local `.env` to the server.
+
+The production image rejects `MUSIC_ENGINE=fake` and missing provider
+credentials to prevent paid requests from silently using `FakeEngine`. Keep
+Suno disabled until the official API contract in `SUNO.md` §3 is complete.
 
 ## 5. Storage
 
@@ -98,8 +84,16 @@ SENTRY_DSN=
 
 ## 6. Backups
 
-- Nightly 02:00 EAT: `pg_dump | gzip` → upload to R2 bucket `osp-music-backups` (keep 14 days). Run as a small `backup` service or host cron.
-- **Test a restore** into a temporary database before launch and once a month.
+- `scripts/backup-postgres.sh` creates a PostgreSQL 16 custom-format dump
+  (compressed by `pg_dump`), uploads it to the private R2 bucket
+  `osp-music-backups`, and removes backups older than 14 days. The local
+  temporary dump is permission-restricted and removed after upload.
+- Install it in root's crontab at 02:00 East Africa Time, for example:
+  `CRON_TZ=Africa/Dar_es_Salaam` followed by
+  `0 2 * * * bash /opt/osp-music/scripts/backup-postgres.sh >> /var/log/osp-music-backup.log 2>&1`.
+- Run `sudo bash /opt/osp-music/scripts/test-postgres-restore.sh` after the first
+  backup and monthly. It downloads the newest dump and restores it inside a
+  disposable PostgreSQL 16 container with no network or published ports.
 - Songs are already in R2, so only the database needs backing up.
 
 ## 7. Deploy steps (each release)
@@ -113,6 +107,9 @@ docker compose -p osp-music -f docker-compose.prod.yml up -d
 curl -fsS https://music.example.co.tz/api/health
 ```
 Rollback: `git checkout <previous tag>` and repeat (migrations must be backward-compatible — never drop a column in the same release that stops using it).
+The Compose file publishes only `127.0.0.1:3100` and `127.0.0.1:8100`;
+confirm those ports are free before starting it. For the first release, configure
+the DNS, proxy, and HTTPS only after inspecting the VPS as described in §1.
 
 ## 8. Launch checklist
 
@@ -121,7 +118,7 @@ Rollback: `git checkout <previous tag>` and repeat (migrations must be backward-
 - [ ] `/admin` reachable only with a staff account; strong password.
 - [ ] Snippe live key, webhook secret set; real TZS 1,000 top-up works (SNIPPE.md §8).
 - [ ] Mureka key set; balance ≥ $10; one real song generated end-to-end.
-- [ ] Suno: SUNO.md §2 checklist done, key set, one real song end-to-end — then set it as fallback engine.
+- [ ] Suno is not selected unless SUNO.md §3 has an official, implemented API contract and its separate launch checks are complete.
 - [ ] Refund path tested with `FakeEngine` on staging (`#fail1`, `#fail2`).
 - [ ] Backup ran and restore tested.
 - [ ] Postgres/Redis ports not reachable from outside (`nmap` from your laptop).

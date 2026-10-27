@@ -1,4 +1,5 @@
 .env
+.env.prod
 .venv/
 __pycache__/
 *.py[cod]
@@ -8,6 +9,7 @@ __pycache__/
 htmlcov/
 staticfiles/
 media/
+backups/
 node_modules/
 .next/
 out/

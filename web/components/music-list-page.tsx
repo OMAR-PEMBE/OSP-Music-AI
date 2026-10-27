@@ -38,7 +38,7 @@ export function MusicListPage() {
     <AppShell>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">02 / OSP LIBRARY</p>
+          <p className="eyebrow">02 / {t("libraryEyebrow")}</p>
           <h1>{t("mySongs")}</h1>
           <p>{t("sampleBody")}</p>
         </div>
@@ -82,7 +82,7 @@ export function MusicListPage() {
 }
 
 function SongCard({ song }: { song: SongJob }) {
-  const { t } = useLocaleMessages();
+  const { t, locale } = useLocaleMessages();
   const genreLabel =
     (
       {
@@ -114,7 +114,7 @@ function SongCard({ song }: { song: SongJob }) {
             <SongStatus status={song.status} />
           </div>
           <p>
-            {genreLabel} <span>·</span> {formatDate(song.created_at)}
+            {genreLabel} <span>·</span> {formatDate(song.created_at, locale)}
           </p>
           <span className="song-card-lyrics">
             {song.lyrics.slice(0, 100) || t("songDetail")}

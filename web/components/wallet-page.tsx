@@ -32,7 +32,7 @@ type Payment = {
 };
 
 export function WalletPage() {
-  const { t } = useLocaleMessages();
+  const { t, locale } = useLocaleMessages();
   const [config, setConfig] = useState<ApiConfig | null>(null);
   const [me, setMe] = useState<Me | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -142,7 +142,7 @@ export function WalletPage() {
     <AppShell>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">03 / OSP WALLET</p>
+          <p className="eyebrow">03 / {t("walletEyebrow")}</p>
           <h1>{t("walletTitle")}</h1>
           <p>{t("priceDisclaimer")}</p>
         </div>
@@ -249,17 +249,8 @@ export function WalletPage() {
                 <strong>{payment.phone_masked}</strong>
               </div>
               <div>
-                <span>
-                  {t(
-                    ("status_" +
-                      (payment.status === "completed"
-                        ? "ready"
-                        : payment.status === "pending"
-                          ? "running"
-                          : "failed")) as never,
-                  )}
-                </span>
-                <strong>{formatDate(payment.created_at)}</strong>
+                <span>{t(`paymentStatus_${payment.status}`)}</span>
+                <strong>{formatDate(payment.created_at, locale)}</strong>
               </div>
             </div>
           )}
@@ -302,7 +293,7 @@ export function WalletPage() {
                 <div className="transaction-copy">
                   <strong>{t(`transaction_${entry.type}` as never)}</strong>
                   <small>
-                    {entry.song_title || formatDate(entry.created_at)}
+                    {entry.song_title || formatDate(entry.created_at, locale)}
                   </small>
                 </div>
                 <div className="transaction-amount">

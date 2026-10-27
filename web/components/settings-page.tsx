@@ -8,7 +8,8 @@ import { useLocaleMessages } from "@/components/locale-provider";
 import { api, ApiError, type Me } from "@/lib/api";
 
 export function SettingsPage() {
-  const { t, locale, setLocale, theme, toggleTheme } = useLocaleMessages();
+  const { t, locale, setLocale, theme, setTheme, preferenceError } =
+    useLocaleMessages();
   const [profile, setProfile] = useState<Me | null>(null);
   const [name, setName] = useState("");
   const [firstName, setFirstName] = useState("");
@@ -85,7 +86,7 @@ export function SettingsPage() {
     <AppShell>
       <div className="page-heading">
         <div>
-          <p className="eyebrow">04 / OSP ACCOUNT</p>
+          <p className="eyebrow">04 / {t("accountEyebrow")}</p>
           <h1>{t("settings")}</h1>
           <p>{t("profile")}</p>
         </div>
@@ -98,6 +99,11 @@ export function SettingsPage() {
       {message && (
         <div className="feedback success" role="status">
           {message}
+        </div>
+      )}
+      {preferenceError && (
+        <div className="feedback error" role="alert">
+          {t("preferencesSaveFailed")}
         </div>
       )}
       <div className="settings-grid">
@@ -193,6 +199,7 @@ export function SettingsPage() {
                 type="button"
                 className={locale === "sw" ? "selected" : ""}
                 onClick={() => setLocale("sw")}
+                aria-pressed={locale === "sw"}
               >
                 SW
               </button>
@@ -200,6 +207,7 @@ export function SettingsPage() {
                 type="button"
                 className={locale === "en" ? "selected" : ""}
                 onClick={() => setLocale("en")}
+                aria-pressed={locale === "en"}
               >
                 EN
               </button>
@@ -208,16 +216,35 @@ export function SettingsPage() {
           <div className="setting-row">
             <div>
               <strong>{t("theme")}</strong>
-              <small>{t(theme === "light" ? "themeLight" : "themeDark")}</small>
+              <small>
+                {t(
+                  theme === "system"
+                    ? "themeSystem"
+                    : theme === "light"
+                      ? "themeLight"
+                      : "themeDark",
+                )}
+              </small>
             </div>
-            <button
-              type="button"
-              className="button button-outline"
-              onClick={toggleTheme}
-            >
-              <Icon name={theme === "light" ? "moon" : "sun"} />
-              {t(theme === "light" ? "themeDark" : "themeLight")}
-            </button>
+            <div className="segmented-control">
+              {(["system", "light", "dark"] as const).map((option) => (
+                <button
+                  type="button"
+                  key={option}
+                  className={theme === option ? "selected" : ""}
+                  onClick={() => setTheme(option)}
+                  aria-pressed={theme === option}
+                >
+                  {t(
+                    option === "system"
+                      ? "themeSystem"
+                      : option === "light"
+                        ? "themeLight"
+                        : "themeDark",
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="account-status">
             <span

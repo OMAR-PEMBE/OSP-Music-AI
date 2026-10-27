@@ -30,7 +30,9 @@ Requirements: Docker Engine with the Docker Compose plugin.
 
 The headless browser auth API is mounted at `/api/auth/browser/v1/auth/`. Profile read/update and avatar upload use `/api/me`, `/api/me/avatar`; account deletion uses `/api/me/delete`. Song endpoints are under `/api/songs`; the lyrics helper is `/api/lyrics`. Generated audio is stored in the local S3-compatible bucket and served through short-lived signed URLs.
 
-PostgreSQL, Redis, and the S3-compatible `minio` service are private to the Compose network. The service uses SILO, a MinIO community fork, because upstream MinIO images are no longer pullable. Its local console is at <http://localhost:9001> (credentials are in `docker-compose.yml`). Local account avatars use the persistent `media` volume; production storage is configured for Cloudflare R2. No external API credentials are needed for local development flows. Demo wallet top-ups are labeled on the wallet screen and complete instantly without contacting Snippe.
+The interface defaults to Swahili and follows the device theme by default. Language and theme choices are saved to the signed-in profile and cached on the device. The web app includes an installable PWA manifest and app icon; use the in-app install action or the browser's Add to Home Screen option. Offline audio or page caching is not enabled.
+
+PostgreSQL and Redis are private to the Compose network. The S3-compatible `minio` service uses SILO, a MinIO community fork, because upstream MinIO images are no longer pullable; its local console is at <http://localhost:9001> (credentials are in `docker-compose.yml`), and local song download links use the host-accessible endpoint at <http://localhost:9000>. Local account avatars use the persistent `media` volume; production storage is configured for Cloudflare R2. No external API credentials are needed for local development flows. Demo wallet top-ups are labeled on the wallet screen and complete instantly without contacting Snippe.
 
 ## Backend checks
 

@@ -10,7 +10,7 @@ import { useLocaleMessages } from "@/components/locale-provider";
 import { api, ApiError, formatDate, type SongJob } from "@/lib/api";
 
 export function SongDetailPage({ id }: { id: string }) {
-  const { t } = useLocaleMessages();
+  const { t, locale } = useLocaleMessages();
   const router = useRouter();
   const [song, setSong] = useState<SongJob | null>(null);
   const [title, setTitle] = useState("");
@@ -18,6 +18,18 @@ export function SongDetailPage({ id }: { id: string }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const genreLabel =
+    (
+      {
+        bongo_flava: t("genre_bongo_flava"),
+        rnb: t("genre_rnb"),
+        afrobeats: t("genre_afrobeats"),
+        amapiano: t("genre_amapiano"),
+        gospel: t("genre_gospel"),
+        hiphop: t("genre_hiphop"),
+        other: t("genre_other"),
+      } as Record<string, string>
+    )[song?.genre ?? ""] ?? song?.genre;
 
   useEffect(() => {
     let alive = true;
@@ -125,12 +137,19 @@ export function SongDetailPage({ id }: { id: string }) {
             </div>
             <div className="detail-copy">
               <p className="eyebrow">
-                {t("songDetail")} / {formatDate(song.created_at)}
+                {t("songDetail")} / {formatDate(song.created_at, locale)}
               </p>
               <h1>{song.title || t("sampleTitle")}</h1>
               <SongStatus status={song.status} />
               <p className="detail-meta">
-                {song.genre} <span>·</span> {song.language.toUpperCase()}
+                {genreLabel} <span>·</span>{" "}
+                {t(
+                  song.language === "sw"
+                    ? "language_sw"
+                    : song.language === "en"
+                      ? "language_en"
+                      : "language_mixed",
+                )}
               </p>
             </div>
           </section>

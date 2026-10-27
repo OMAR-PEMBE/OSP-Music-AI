@@ -67,7 +67,7 @@ export function LandingPage() {
               </div>
             </div>
             <div className="art-caption">
-              <span className="live-dot" /> OSP SOUND STUDIO
+              <span className="live-dot" /> {t("soundStudio")}
             </div>
             <div className="art-card">
               <span className="art-card-icon">
@@ -139,7 +139,7 @@ export function LandingPage() {
               <i />
             </div>
             <div className="feature-stamp">
-              2×<small>VERSIONS</small>
+              2×<small>{t("versions")}</small>
             </div>
           </div>
           <div className="feature-copy">
@@ -168,7 +168,7 @@ export function LandingPage() {
 
         <section className="faq-section section-wrap" id="faq">
           <div className="section-heading">
-            <p className="eyebrow">04 / FAQ</p>
+            <p className="eyebrow">04 / {t("faqShort")}</p>
             <h2>{t("faqTitle")}</h2>
           </div>
           <div className="faq-list">

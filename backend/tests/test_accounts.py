@@ -90,6 +90,28 @@ def test_display_name_is_case_insensitively_unique():
     assert "display_name" in str(response.content)
 
 
+def test_signup_accepts_csrf_from_local_web_origin():
+    client = Client(enforce_csrf_checks=True)
+    csrf_response = client.get("/api/csrf")
+
+    response = client.post(
+        f"{AUTH}/signup",
+        data={
+            "email": "browser@example.test",
+            "password": "SafePass_2026!",
+            "first_name": "Omar",
+            "last_name": "Mussa",
+            "display_name": "BrowserUser",
+        },
+        content_type="application/json",
+        HTTP_ORIGIN="http://localhost:3000",
+        HTTP_X_CSRFTOKEN=csrf_response.json()["csrfToken"],
+    )
+
+    assert response.status_code == 401, response.content
+    assert get_user_model().objects.filter(email="browser@example.test").exists()
+
+
 def test_me_only_returns_the_authenticated_users_profile():
     user_model = get_user_model()
     user_a = user_model.objects.create_user(

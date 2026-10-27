@@ -26,6 +26,7 @@ from .serializers import (
     parse_idempotency_key,
 )
 from .services import build_lyrics_prompt
+from .storage import signed_audio_url
 
 logger = logging.getLogger(__name__)
 
@@ -267,15 +268,9 @@ class AudioRedirectView(APIView):
             parameters = {
                 "ResponseContentDisposition": f'attachment; filename="{filename}"'
             }
-        try:
-            url = default_storage.url(
-                version.storage_key,
-                parameters=parameters,
-                expire=600,
-            )
-        except TypeError:
-            url = default_storage.url(version.storage_key)
-        return HttpResponseRedirect(url)
+        return HttpResponseRedirect(
+            signed_audio_url(version.storage_key, parameters=parameters, expire=600)
+        )
 
 
 class MarkSongsSeenView(APIView):

@@ -147,7 +147,7 @@ export function CreatePage() {
     <AppShell>
       <div className="page-heading create-heading">
         <div>
-          <p className="eyebrow">01 / OSP STUDIO</p>
+          <p className="eyebrow">01 / {t("studioEyebrow")}</p>
           <h1>{t("create")}</h1>
           <p>{t("heroBody")}</p>
         </div>

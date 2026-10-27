@@ -1,5 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal
+from urllib.parse import urlparse
 from uuid import uuid4
 
 import pytest
@@ -112,6 +113,8 @@ def test_fake_song_finishes_ready_and_charges_once(monkeypatch):
     assert audio_response.status_code == 302
     assert "X-Amz-Expires=600" in audio_response["Location"]
     assert download_response.status_code == 302
+    assert urlparse(download_response["Location"]).hostname == "localhost"
+    assert urlparse(download_response["Location"]).port == 9000
     assert "response-content-disposition" in download_response["Location"].lower()
 
 

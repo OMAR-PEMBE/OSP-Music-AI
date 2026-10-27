@@ -18,7 +18,8 @@ const navItems = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { t, locale, setLocale, theme, toggleTheme } = useLocaleMessages();
+  const { t, locale, setLocale, resolvedTheme, toggleTheme } =
+    useLocaleMessages();
   const [me, setMe] = useState<Me | null>(null);
   const [ready, setReady] = useState(false);
 
@@ -106,7 +107,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <button
               className="icon-button compact"
               onClick={() => setLocale(locale === "sw" ? "en" : "sw")}
-              aria-label="Change language"
+              aria-label={t("changeLanguage")}
             >
               {locale === "sw" ? "EN" : "SW"}
             </button>
@@ -115,7 +116,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               onClick={toggleTheme}
               aria-label={t("theme")}
             >
-              <Icon name={theme === "light" ? "moon" : "sun"} />
+              <Icon name={resolvedTheme === "light" ? "moon" : "sun"} />
             </button>
           </div>
           <Link

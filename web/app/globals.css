@@ -23,8 +23,55 @@ html[data-theme="dark"] {
   --green-dark: #18240d;
   --shadow: 0 20px 60px #0004;
 }
+html,
+body {
+  min-height: 100%;
+}
 * {
   box-sizing: border-box;
+}
+.pwa-install {
+  position: fixed;
+  z-index: 20;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+.pwa-install-card {
+  position: relative;
+  width: min(320px, calc(100vw - 40px));
+  padding: 18px 42px 18px 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+.pwa-install-card p,
+.pwa-install-error {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.pwa-install-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 24px;
+  cursor: pointer;
+}
+.pwa-install-error {
+  color: #b42318;
+}
+@media (max-width: 760px) {
+  .pwa-install {
+    bottom: max(88px, calc(72px + env(safe-area-inset-bottom)));
+  }
 }
 body {
   margin: 0;

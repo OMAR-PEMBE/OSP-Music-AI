@@ -110,8 +110,8 @@ export type Me = {
   last_name: string;
   display_name: string;
   avatar_url: string | null;
-  language: string;
-  theme: string;
+  language: "sw" | "en";
+  theme: "system" | "light" | "dark";
   email_verified: boolean;
   balance_tzs: number;
   unseen_songs: number;
@@ -169,8 +169,8 @@ export function formatTzs(amount: number): string {
   }).format(amount);
 }
 
-export function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("sw-TZ", {
+export function formatDate(value: string, locale: "sw" | "en" = "sw"): string {
+  return new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-TZ", {
     dateStyle: "medium",
     timeStyle: "short",
     timeZone: "Africa/Dar_es_Salaam",

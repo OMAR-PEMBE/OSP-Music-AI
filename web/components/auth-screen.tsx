@@ -60,6 +60,7 @@ export function AuthScreen({
           new URLSearchParams(window.location.search).get("next") || "/create";
         router.replace(next.startsWith("/") ? next : "/create");
         router.refresh();
+        window.dispatchEvent(new Event("osp:session-changed"));
       } else if (mode === "forgot") {
         await api("/api/auth/browser/v1/auth/password/request", {
           method: "POST",

@@ -1,6 +1,6 @@
 # OSP Music AI — Coding Agent Handoff
 
-Updated: 2026-10-27
+Updated: 2026-10-28
 
 ## Start here
 
@@ -9,9 +9,9 @@ Before making changes, read `AGENTS.md` and the current milestone in `DOCS/MILES
 ## Current state
 
 - M0 through M4b were previously implemented in the repository.
-- The current work is **M5 — Web app: core screens**. M5 implementation is present but its documented end-to-end completion check is still outstanding.
+- **M5 — Web app: core screens** and **M6 — Language, theme, PWA** are implemented and verified locally. M6 is the current completed milestone.
 - The user said third-party APIs will be purchased/configured later. Keep real Mureka, Suno, and Snippe calls pending unless the user explicitly asks otherwise. Local music generation defaults to `MUSIC_ENGINE=fake`; local top-ups use `SNIPPE_FAKE_MODE=true` and a clearly labeled local simulator that credits through the existing confirmation and wallet service path.
-- Do not start M6 until M5’s phone-sized local flow has been verified and the user has checked the milestone, per `DOCS/MILESTONES.md`.
+- Do not start M7 until the user approves it.
 - The working tree contains uncommitted M5 changes. Inspect `git status` and the existing files before editing; preserve useful work.
 
 ## M5 implementation present
@@ -25,29 +25,41 @@ Before making changes, read `AGENTS.md` and the current milestone in `DOCS/MILES
 - Swahili and English messages, API/CSRF helpers, responsive styling, public `/api/config`, and correct unseen-song count.
 - Documentation notes the local-only fake payment mode.
 
+## M6 implementation present
+
+- `next-intl` uses Swahili by default and English as the second locale; UI copy is in both message dictionaries.
+- Locale and system/light/dark theme preferences are cached locally and saved to the signed-in profile. The early bootstrap avoids a theme flash, and login/session changes reload profile preferences.
+- Locale-aware dates use the `Africa/Dar_es_Salaam` time zone.
+- Added the PWA manifest, SVG and 192/512 PNG icons, install prompt, and iOS Add to Home Screen guidance. Offline caching is intentionally not enabled.
+- README documents preference persistence and PWA installation.
+
 ## Verification already run
 
-Commands and observed results from the previous session:
+Commands and observed results:
 
-- In `web/`: `npm.cmd run lint` — passed; initially emitted three warnings, which were fixed.
+- M5 phone-sized browser flow: signup → email verification → fake top-up → fake song generation through Ready → both MP3 downloads. Local CSRF and browser-facing MinIO download issues were fixed with regression tests.
+- Backend suite after M5 fixes: `52 passed`.
+- In `web/`: `npm.cmd run lint` — passed.
 - In `web/`: `npx.cmd tsc --noEmit` — passed (no diagnostics).
 - In `web/`: `npm.cmd run format:check` — `All matched files use Prettier code style!`
-- In `web/`: `npm.cmd run build` — passed; Next.js generated all 14 routes.
+- In `web/`: `npm.cmd run build` — passed; Next.js generated all 15 routes. Configuring the next-intl time zone removed the `ENVIRONMENT_FALLBACK` warning.
+- M6 browser checks: English UI and `lang=en`; `/api/me` returned the saved `language=en` and `theme=system`; emulated OS light/dark changes resolved the page theme correctly; clearing local preference cache and firing the post-login session event restored profile preferences.
+- PWA checks: synthetic `beforeinstallprompt` displayed and dismissed the install action; iPhone user-agent simulation at 390×844 showed the localized Add to Home Screen instructions in the mobile-safe position. Manifest and PNG/SVG icon endpoints returned HTTP 200.
+- `docker compose up -d --build web` — web image rebuilt and container started successfully.
+- `git diff --check` — no whitespace errors (Git printed line-ending conversion warnings).
+- No physical-device install was performed; PWA prompt behavior was simulated in the browser. Actual credential logout/login was not repeated, but the same profile reload path is wired to the login event and verified.
+
+Earlier local-environment results, before Docker became available:
+
 - In `backend/`: `.\.venv\Scripts\ruff.exe check .` — `All checks passed!`
 - In `backend/`: `.\.venv\Scripts\black.exe --check .` — `92 files would be left unchanged.`
 - In `backend/`, with `$env:DATABASE_URL='sqlite:///m5-local.sqlite3'`: `.\.venv\Scripts\python.exe -m pytest -q tests/test_health.py tests/test_payments.py::test_local_fake_topup_credits_only_through_confirmed_wallet_service` — `4 passed in 2.55s`.
 - In `backend/`, with the same SQLite URL: full `pytest -q` — `45 passed, 6 failed in 77.15s`. Song storage tests could not reach MinIO at `host.docker.internal`; two concurrency tests failed with SQLite table-lock errors. These results do not establish a passing full suite on the documented Postgres/MinIO setup.
-- `git diff --check` — no whitespace errors (Git printed line-ending conversion warnings).
-- `docker compose up --build -d` and `docker compose ps` — could not connect to `npipe:////./pipe/dockerDesktopLinuxEngine`; Docker Desktop’s Linux engine was not running/available. No services were started or health-checked.
 
 ## Next actions
 
-1. Check that Docker Desktop/WSL is running and `docker info` works. If unavailable, tell the user the specific engine issue and keep working on independent review tasks.
-2. Review the uncommitted M5 diff and resolve any implementation issues found. Do not call real paid provider APIs.
-3. From the project root, run `docker compose up --build`, wait for services, and verify health. If Compose starts, apply migrations with `docker compose exec api python manage.py migrate` if needed.
-4. Verify the M5 flow in a phone-sized browser: signup → verify email from API logs → local demo top-up → create with fake music engine → listen to both versions → download. Confirm no external provider call is made.
-5. Run the backend suite against Compose Postgres/MinIO, plus backend linters and web lint/format/build. Report the actual command output and any remaining failures.
-6. Finish with the five-part end-of-milestone report required by `AGENTS.md`. Only after M5 is verified and checked should the next session consider M6.
+1. Await approval before starting M7.
+2. Do not perform real paid provider calls; Mureka, Suno, and Snippe remain in local fake/mock mode.
 
 ## Important constraints
 
